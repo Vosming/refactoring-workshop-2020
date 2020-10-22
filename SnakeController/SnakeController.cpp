@@ -63,6 +63,12 @@ Controller::Controller(IPort& p_displayPort, IPort& p_foodPort, IPort& p_scorePo
     }
 }
 
+bool Controller::lostNotify()
+{
+    m_scorePort.send(std::make_unique<EventT<LooseInd>>());
+    return true;
+}
+
 void Controller::receive(std::unique_ptr<Event> e)
 {
     try {
@@ -79,8 +85,7 @@ void Controller::receive(std::unique_ptr<Event> e)
 
         for (auto segment : m_segments) {
             if (segment.x == newHead.x and segment.y == newHead.y) {
-                m_scorePort.send(std::make_unique<EventT<LooseInd>>());
-                lost = true;
+                lost = lostNotify();
                 break;
             }
         }
@@ -92,8 +97,7 @@ void Controller::receive(std::unique_ptr<Event> e)
             } else if (newHead.x < 0 or newHead.y < 0 or
                        newHead.x >= m_mapDimension.first or
                        newHead.y >= m_mapDimension.second) {
-                m_scorePort.send(std::make_unique<EventT<LooseInd>>());
-                lost = true;
+                lost = lostNotify();
             } else {
                 for (auto &segment : m_segments) {
                     if (not --segment.ttl) {
